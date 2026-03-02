@@ -1,0 +1,8 @@
+note This is a sample B# program
+
+let name be "Raunak"
+let age be 21
+say "Hello", name
+say "Age is", age
+change age to age plus 1
+say "Next year you will be", age
