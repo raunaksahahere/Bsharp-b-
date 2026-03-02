@@ -1,0 +1,22 @@
+note Demonstrating try/catch error handling
+
+define function safe_divide with a and b do
+    if b is equal to 0 then
+        return "Cannot divide by zero!"
+    end
+    return a divided by b
+end
+
+let result be call safe_divide with 10 and 2
+say "10 / 2 =", result
+
+try
+    let x be 5
+    note This will succeed
+    let answer be call safe_divide with 20 and 4
+    say "20 / 4 =", answer
+catch problem
+    say "Something went wrong:", problem
+end
+
+say "Program continues safely after error handling."

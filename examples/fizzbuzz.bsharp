@@ -1,0 +1,13 @@
+note Classic FizzBuzz
+
+for each n from 1 to 20 do
+    if n modulo 15 is equal to 0 then
+        say "FizzBuzz"
+    else if n modulo 3 is equal to 0 then
+        say "Fizz"
+    else if n modulo 5 is equal to 0 then
+        say "Buzz"
+    else
+        say n
+    end
+end

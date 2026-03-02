@@ -1,0 +1,8 @@
+note My first B# program
+
+let name be string "WORLD"
+say "HELLO,", name
+
+let greeting be "WELCOME TO B#!"
+say greeting
+explain
