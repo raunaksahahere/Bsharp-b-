@@ -20,3 +20,4 @@ catch problem
 end
 
 say "Program continues safely after error handling."
+explain
