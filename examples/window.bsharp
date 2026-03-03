@@ -1,7 +1,0 @@
-use window
-
-call window.open with "Raunak Ka Dera HAHAHAHA"
-call window.display with "Raunak Ka Dera HAHAHAHA"
-
-call window.open with "Raunak HAHAHAHA"
-call window.display with "HAHAHAHA"
