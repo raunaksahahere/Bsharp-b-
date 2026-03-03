@@ -1,0 +1,106 @@
+note ╔══════════════════════════════════════╗
+note   B# Standard Library Demo  v1.1.0
+note ╚══════════════════════════════════════╝
+
+note ── io ─────────────────────────────────
+use io
+call io.print with "=== io ==="
+call io.write_file with "greet.txt" and "Hello from B#!"
+let txt be call io.read_file with "greet.txt"
+call io.print with txt
+
+note ── math ─────────────────────────────
+use math
+say "=== math ==="
+say math.PI
+say call math.sqrt with 81
+say call math.pow with 2 and 8
+say call math.abs with 0 minus 42
+say call math.min with 10 and 3
+say call math.max with 10 and 3
+say call math.floor with 7.9
+say call math.ceil with 7.1
+say "random:" call math.random
+
+note ── string ───────────────────────────
+use string
+say "=== string ==="
+say call string.length with "hello"
+say call string.upper with "world"
+say call string.lower with "BSHARP"
+say call string.trim with "  spaced  "
+let parts be call string.split with "one,two,three" and ","
+say parts
+say call string.join with parts and " | "
+say call string.replace with "cat sat" and "sat" and "napped"
+say call string.contains with "B# is fun" and "fun"
+
+note ── list ─────────────────────────────
+use list
+say "=== list ==="
+let nums be list of 5, 2, 9, 1, 7
+say call list.length with nums
+say call list.append with nums and 42
+say call list.pop with nums
+say call list.get with nums and 0
+say call list.slice with nums and 1 and 4
+say call list.reverse with nums
+say call list.sort with nums
+
+note ── time ─────────────────────────────
+use time
+say "=== time ==="
+let now be call time.now
+say call time.format with now
+
+note ── system ───────────────────────────
+use system
+say "=== system ==="
+let args be call system.args
+say "args count:"
+say call list.length with args
+
+note ── random ───────────────────────────
+use random
+say "=== random ==="
+say call random.int with 1 and 10
+say call random.float
+let options be list of "rock", "paper", "scissors"
+say call random.choice with options
+
+note ── json ─────────────────────────────
+use json
+say "=== json ==="
+let num_str be call json.stringify with 3.14
+say num_str
+let arr_str be call json.stringify with nums
+say arr_str
+let back be call json.parse with "99"
+say back
+
+note ── os ───────────────────────────────
+use os
+say "=== os ==="
+let cwd be call os.cwd
+say "working dir obtained"
+call os.mkdir with "bsharp_test_output"
+say "mkdir ok"
+let listing be call os.listdir with "."
+say call list.length with listing
+
+note ── error ────────────────────────────
+use error
+say "=== error ==="
+try
+    call error.raise with "something went wrong"
+catch msg
+    say msg
+end
+
+define function dangerous do
+    call error.raise with "danger!"
+end
+let caught be call error.try with dangerous
+say caught
+
+say "=== done ==="

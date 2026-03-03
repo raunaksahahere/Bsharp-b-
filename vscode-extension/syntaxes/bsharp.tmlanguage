@@ -1,0 +1,83 @@
+{
+  "name": "B#",
+  "scopeName": "source.bsharp",
+  "fileTypes": ["bsharp"],
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#string" },
+    { "include": "#number" },
+    { "include": "#boolean" },
+    { "include": "#control" },
+    { "include": "#definition" },
+    { "include": "#io_stmt" },
+    { "include": "#types" },
+    { "include": "#operators" },
+    { "include": "#module_access" },
+    { "include": "#use_keyword" },
+    { "include": "#explain" },
+    { "include": "#identifier" }
+  ],
+  "repository": {
+    "comment": {
+      "name": "comment.line.bsharp",
+      "match": "^\\s*note\\b.*$"
+    },
+    "string": {
+      "name": "string.quoted.double.bsharp",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        { "name": "constant.character.escape.bsharp", "match": "\\\\." }
+      ]
+    },
+    "number": {
+      "name": "constant.numeric.bsharp",
+      "match": "\\b\\d+(\\.\\d+)?\\b"
+    },
+    "boolean": {
+      "name": "constant.language.bsharp",
+      "match": "\\b(true|false)\\b"
+    },
+    "control": {
+      "name": "keyword.control.bsharp",
+      "match": "\\b(if|then|else|end|while|do|for|each|from|to|in|try|catch|return)\\b"
+    },
+    "definition": {
+      "name": "keyword.declaration.bsharp",
+      "match": "\\b(let|be|change|define|function|with|and|call)\\b"
+    },
+    "io_stmt": {
+      "name": "keyword.other.io.bsharp",
+      "match": "\\b(say|ask|store|read|write|add|remove)\\b"
+    },
+    "types": {
+      "name": "storage.type.bsharp",
+      "match": "\\b(integer|float|boolean|dictionary)\\b"
+    },
+    "operators": {
+      "name": "keyword.operator.bsharp",
+      "match": "\\b(plus|minus|times|divided|by|modulo|is|equal|not|greater|less|than|at|least|most|or|does|contain|get|length|of|join)\\b"
+    },
+    "module_access": {
+      "comment": "Highlights namespaced module access: math.sqrt, string.upper, window.open, etc.",
+      "match": "\\b(io|math|string|list|time|system|random|json|os|error|window)(\\.([A-Za-z_][A-Za-z0-9_]*))?\\b",
+      "captures": {
+        "1": { "name": "support.class.module.bsharp" },
+        "2": { "name": "punctuation.accessor.bsharp" },
+        "3": { "name": "support.function.bsharp" }
+      }
+    },
+    "use_keyword": {
+      "name": "keyword.other.use.bsharp",
+      "match": "\\b(use|library)\\b"
+    },
+    "explain": {
+      "name": "keyword.other.explain.bsharp",
+      "match": "\\bexplain\\b"
+    },
+    "identifier": {
+      "name": "variable.other.bsharp",
+      "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+    }
+  }
+}
