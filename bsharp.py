@@ -13,8 +13,7 @@ KEYWORDS = {
     'let','be','change','to','say','ask','and','store','in','as','if','then','else','end',
     'while','do','for','each','from','define','function','with','return','call','list','of',
     'dictionary','try','catch','use','library','note','not','or','integer','float','boolean',
-    'string','true','false','add','remove','get','length','join','read','write','explain',
-    'plus','minus','times','divided','by','modulo','is','equal','greater','less','than',
+    'string','true','false','read','write','explain','plus','minus','times','divided','by','modulo','is','equal','greater','less','than',
     'at','least','most','does','contain','contains','the'
 }
 
@@ -80,31 +79,42 @@ class Parser:
         return s
 
     def stmt(self):
-        t = self.cur(); ln = t[2]
-        if t[0] == 'EOF': return None
+        t = self.cur()
+        ln = t[2]
+
+        if t[0] == 'EOF':
+            return None
+
+        if t[0] == 'IDENTIFIER':
+            if t[1] == 'add':
+                return self.p_add()
+            if t[1] == 'remove':
+                return self.p_remove()
+            if t[1] == 'get':
+                return self.p_get()
+            if t[1] == 'join':
+                return self.p_join()
+
         if t[0] == 'KEYWORD':
             k = t[1]
-            if k == 'note':
-                cl = ln
-                while self.cur()[2]==cl and self.cur()[0]!='EOF': self.adv()
-                return None
-            if k == 'let':     return self.p_let()
-            if k == 'change':  return self.p_change()
-            if k == 'say':     return self.p_say()
-            if k == 'ask':     return self.p_ask()
-            if k == 'if':      return self.p_if()
-            if k == 'while':   return self.p_while()
-            if k == 'for':     return self.p_for()
-            if k == 'define':  return self.p_def()
-            if k == 'return':  return self.p_return()
-            if k == 'call':    return self.nd('CallStmt', ln, call=self.p_callexpr())
-            if k == 'try':     return self.p_try()
-            if k == 'use':     return self.p_use()
-            if k == 'add':     return self.p_add()
-            if k == 'remove':  return self.p_remove()
-            if k == 'read':    return self.p_read()
-            if k == 'write':   return self.p_write()
-            if k == 'explain': self.adv(); return self.nd('Explain', ln)
+            if k == 'let': return self.p_let()
+            if k == 'change': return self.p_change()
+            if k == 'say': return self.p_say()
+            if k == 'ask': return self.p_ask()
+            if k == 'if': return self.p_if()
+            if k == 'while': return self.p_while()
+            if k == 'for': return self.p_for()
+            if k == 'define': return self.p_def()   
+            if k == 'return': return self.p_return()
+            if k == 'call': return self.nd('CallStmt', ln, call=self.p_callexpr())
+            if k == 'try': return self.p_try()
+            if k == 'use': return self.p_use()
+            if k == 'read': return self.p_read()
+            if k == 'write': return self.p_write()
+            if k == 'explain':
+                self.adv()
+                return self.nd('Explain', ln)
+
         raise BSharpError(f'Did not understand line starting with "{t[1]}"', ln)
 
     def p_let(self):
@@ -200,14 +210,6 @@ class Parser:
         ln=self.ln(); self.exkw('use'); self.exkw('library')
         return self.nd('UseLib',ln,name=self.exid())
 
-    def p_add(self):
-        ln=self.ln(); self.exkw('add'); value=self.p_expr(); self.exkw('to')
-        return self.nd('AddList',ln,value=value,lst=self.exid())
-
-    def p_remove(self):
-        ln=self.ln(); self.exkw('remove'); value=self.p_expr(); self.exkw('from')
-        return self.nd('RemList',ln,value=value,lst=self.exid())
-
     def p_read(self):
         ln=self.ln(); self.exkw('read'); self.exkw('from'); fn=self.p_primary()
         self.exkw('and'); self.exkw('store'); self.exkw('in')
@@ -217,13 +219,38 @@ class Parser:
         ln=self.ln(); self.exkw('write'); value=self.p_expr(); self.exkw('to')
         return self.nd('WriteFile',ln,value=value,filename=self.p_primary())
 
+    def p_add(self):
+        ln = self.ln()
+        self.adv()  
+        value = self.p_expr()
+        self.exkw('to')
+        return self.nd('AddList', ln, value=value, lst=self.exid())
+
+    def p_remove(self):
+        ln = self.ln()
+        self.adv()   
+        value = self.p_expr()
+        self.exkw('from')
+        return self.nd('RemList', ln, value=value, lst=self.exid())
+
     def p_get(self):
-        ln=self.ln(); self.exkw('get'); self.exkw('length'); self.exkw('of')
-        return self.nd('GetLen',ln,target=self.p_primary())
+        ln = self.ln()
+        self.adv()  
+
+        if self.cur()[0] != 'IDENTIFIER' or self.cur()[1] != 'length':
+            raise BSharpError('Expected "length" after "get"', ln)
+
+        self.adv()  
+        self.exkw('of')
+
+        return self.nd('GetLen', ln, target=self.p_primary())   
 
     def p_join(self):
-        ln=self.ln(); self.exkw('join'); target=self.p_primary(); self.exkw('with')
-        return self.nd('JoinStr',ln,target=target,sep=self.p_primary())
+        ln = self.ln()
+        self.adv()   
+        target = self.p_primary()
+        self.exkw('with')   
+        return self.nd('JoinStr', ln, target=target, sep=self.p_primary())
 
     def p_csv(self):
         if self.cur()[0]=='EOF' or self.iskw('end','then','do','else'): return []
@@ -287,8 +314,8 @@ class Parser:
             if self.cur()[0]=='RBRACKET': self.adv()
             return self.nd('LL',ln,items=items)
         if t[0]=='KEYWORD' and t[1]=='call': return self.p_callexpr()
-        if t[0]=='KEYWORD' and t[1]=='get':  return self.p_get()
-        if t[0]=='KEYWORD' and t[1]=='join': return self.p_join()
+        if t[0]=='IDENTIFIER' and t[1]=='get':  return self.p_get()
+        if t[0]=='IDENTIFIER' and t[1]=='join': return self.p_join()
         if t[0]=='IDENTIFIER': self.adv(); return self.nd('Var',ln,name=t[1])
         raise BSharpError(f'Expected a value (number, text, variable, true/false) but got "{t[1]}"', ln)
 
@@ -531,3 +558,12 @@ def main():
     except KeyboardInterrupt: print('\n[stopped]'); sys.exit(0)
 
 if __name__=='__main__': main()
+# b# for beginers
+# b# is a simple programming language designed to be easy to learn and use
+# b# is a interpreted language, meaning that you can run b# programs directly without compiling
+# b# is a statically typed language, meaning that you must declare the type of each variable
+# b# is a case insensitive language, meaning that you can use both uppercase and lowercase letters
+# b# is a whitespace insensitive language, meaning that you can use any amount of whitespace you want
+# b# is a line based language, meaning that each line of code is executed in order
+# b# is a interpreted language, meaning that you can run b# programs directly without compiling
+# b# is fun hehehe
