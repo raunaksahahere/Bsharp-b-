@@ -6,7 +6,6 @@ import time    as _time
 from core        import BSharpError
 from lexer       import lex
 from parser      import Parser
-from interpreter import Runtime
 from compiler    import compile_ast
 from vm          import run_chunk
 from bytecode    import BSC_VERSION, chunk_to_dict, chunk_from_dict, Chunk
@@ -24,16 +23,10 @@ Usage:
   bsharp help                     Show this help
 
 Flags:
-  --vm        Force VM execution (default)
-  --interp    Force interpreter (tree-walking) execution
   --trace     Print every statement/instruction as it executes
   --debug     Alias for --trace
   --disasm    Print bytecode disassembly before running
 
-Execution modes:
-  Default     Compile to bytecode → cache .bsc → run on VM
-  --interp    Skip compiler, run AST directly (original mode)
-  --vm        Explicitly use VM (same as default)
 
 Standard Libraries  (use <n> to import):
   io      print(v)  input(prompt)  read_file(path)  write_file(path, content)
@@ -52,8 +45,7 @@ Standard Libraries  (use <n> to import):
 """.format(version=VERSION)
 
 
-# ── .bsc helpers ──────────────────────────────────────────────────────────────
-
+# ── .bsc helpers 
 def _bsc_path(bs_path):
     """Return the .bsc path for a given .bsharp file."""
     return _os.path.splitext(bs_path)[0] + '.bsc'
@@ -104,28 +96,6 @@ def _load_bsc(bsc_path):
 
 
 # ── Run modes ─────────────────────────────────────────────────────────────────
-
-def _run_interp(fname, trace=False):
-    """Run a .bsharp file using the tree-walking interpreter."""
-    try:
-        with open(fname, 'r', encoding='utf-8') as f:
-            source = f.read()
-    except FileNotFoundError:
-        print(f'Error: File "{fname}" not found.'); return False
-    sl = source.splitlines()
-    if trace:
-        print(f'[interp] Running "{fname}" — {len(sl)} lines\n{"─"*50}')
-    try:
-        tokens     = lex(source)
-        prog       = Parser(tokens).parse()
-        script_dir = _os.path.dirname(_os.path.abspath(fname))
-        Runtime(trace=trace, src=sl, script_dir=script_dir).run(prog)
-        return True
-    except BSharpError as e:
-        print(f'\n{"━"*50}\n{e.friendly()}\n{"━"*50}'); return False
-    except KeyboardInterrupt:
-        print('\n[stopped]'); return False
-
 
 def _run_vm(fname, trace=False, disasm=False):
     """Run a .bsharp file using the bytecode VM (with .bsc caching)."""
@@ -194,15 +164,13 @@ def _run_bsc(fname, trace=False, disasm=False):
 # ── Commands ──────────────────────────────────────────────────────────────────
 
 def cmd_run(argv):
-    """bsharp run <file> [--vm|--interp] [--trace] [--debug] [--disasm]"""
+    """bsharp run <file> [--trace] [--debug] [--disasm]"""
     files  = [a for a in argv if not a.startswith('--')]
     flags  = [a for a in argv if a.startswith('--')]
     trace  = '--trace' in flags or '--debug' in flags
     disasm = '--disasm' in flags
-    interp = '--interp' in flags
-
     if not files:
-        print('Usage: bsharp run <file.bsharp|file.bsc> [--vm|--interp] [--trace]')
+        print('Usage: bsharp run <file.bsharp|file.bsc> [--trace]')
         sys.exit(1)
 
     fname = files[0]
@@ -213,10 +181,7 @@ def cmd_run(argv):
         sys.exit(0 if ok else 1)
 
     # Running a .bsharp source file
-    if interp:
-        ok = _run_interp(fname, trace=trace)
-    else:
-        ok = _run_vm(fname, trace=trace, disasm=disasm)
+    ok = _run_vm(fname, trace=trace, disasm=disasm)
 
     sys.exit(0 if ok else 1)
 
@@ -261,14 +226,12 @@ def cmd_build(argv):
 
 
 def cmd_test(argv):
-    """bsharp test [folder] [--vm|--interp] [--trace|--debug]"""
+    """bsharp test [folder] [--trace|--debug]"""
     import glob, io as _io
 
     flags      = [a for a in argv if a.startswith('--')]
     positional = [a for a in argv if not a.startswith('--')]
     trace      = '--trace' in flags or '--debug' in flags
-    interp     = '--interp' in flags
-
     if positional:
         test_root = positional[0]
     else:
@@ -287,10 +250,9 @@ def cmd_test(argv):
     if not case_files:
         print(f'No .bsharp test files found in "{cases_dir}".'); sys.exit(0)
 
-    mode   = 'interp' if interp else 'vm'
     passed = failed = 0
     bar    = '─' * 50
-    print(f'\nB# Test Runner  v{VERSION}  [{mode}]\n{bar}')
+    print(f'\nB# Test Runner  v{VERSION}\n{bar}')
 
     for path in case_files:
         name     = _os.path.splitext(_os.path.basename(path))[0]
@@ -302,11 +264,8 @@ def cmd_test(argv):
             with open(path, 'r', encoding='utf-8') as f:
                 source = f.read()
             sl = source.splitlines()
-            if interp:
-                Runtime(trace=trace, src=sl).run(Parser(lex(source)).parse())
-            else:
-                chunk = compile_ast(Parser(lex(source)).parse())
-                run_chunk(chunk, trace=trace)
+            chunk = compile_ast(Parser(lex(source)).parse())
+            run_chunk(chunk, trace=trace)
         except BSharpError as e:
             error_msg = e.friendly()
             buf.write('\n' + '━'*50 + '\n' + error_msg + '\n' + '━'*50)
@@ -350,7 +309,7 @@ def cmd_version():
     print(f'Version  : {VERSION}')
     print(f'Runtime  : Python {sys.version.split()[0]}')
     print(f'Platform : {sys.platform}')
-    print(f'Mode     : VM (bytecode) + Interpreter (fallback)')
+    print(f'Mode     : VM (bytecode)')
 
 
 def main():
@@ -377,11 +336,8 @@ def main():
     if cmd.endswith('.bsharp') or cmd.endswith('.bsc') or _os.path.isfile(cmd):
         flags  = argv[1:]
         trace  = '--trace' in flags or '--debug' in flags
-        interp = '--interp' in flags
         if cmd.endswith('.bsc'):
             sys.exit(0 if _run_bsc(cmd, trace=trace) else 1)
-        elif interp:
-            sys.exit(0 if _run_interp(cmd, trace=trace) else 1)
         else:
             sys.exit(0 if _run_vm(cmd, trace=trace) else 1)
         return
